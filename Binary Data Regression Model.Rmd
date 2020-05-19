@@ -1,0 +1,70 @@
+---
+title: "Binary Data Regression Models for Bank Customer Attrition"
+---
+
+
+```{r}
+br.data = read.csv("Bank_Rentention_Data.csv")
+```
+We estimate the following binary data regression model using the R function glm( ). 
+
+Churn ~ B0 + B1×Agei + B2×Incomei+B3×HomeVali + B4×Tenurei 
+                +B5×DirectDepositi + B6×LoanIndi +B7×Disti + B8×MktSharei
+                                                   
+We use both of the logit (for logistic regression) and probit (for probit regression) link functions of the binomial family.
+
+```{r}
+br.glm1=glm(Churn~Age+Income+HomeVal+Tenure+DirectDeposit+Loan+Dist+MktShare, data=br.data,family = binomial(link="logit"))
+summary(br.glm1)
+br.glm2=glm(Churn~Age+Income+HomeVal+Tenure+DirectDeposit+Loan+Dist+MktShare, data=br.data,family = binomial(link="probit"))
+summary(br.glm2)
+```
+In both models, B6 and B8 are not statistically significant, but B1, B2, B3, B4, B5 and B7 are. 
+B1 : If age increases, the probability of churn will decrease.
+B2 : If income increases, the probability of churn will also increase.
+B3  : If homeval increases, the probability of churn will decrease.
+B4 : If tenure increases, the probability of churn will decrease.
+B5: If directdeposit increases, the probability of churn will decrease.
+B7: If dist increases, the probability of churn will also increase.
+```{r}
+AIC(br.glm1)
+AIC(br.glm2)
+BIC(br.glm1)
+BIC(br.glm2)
+```
+According to this, the probit model is slightly better.
+
+Next we will use a random effect grouped by TractID in the logistic regression. 
+We use the function glmer( ) in the "lme4" package in R to fit 
+
+Churn ~ B0 + B1×Age + B2×Income +B3×HomeVal + B4×Tenure
+                    +B5×DirectDeposit + B6×LoanInd +B7×Dist + B8×MktShare
+                                                                                            
+where B0 is the random effect for the p-th census tract (TractID). 
+```{r}
+br.glm3=glmer(Churn~Age+Income+HomeVal+Tenure+DirectDeposit+Loan+Dist+MktShare+(1|TractID), data=br.data,family = binomial,glmerControl(optimizer="bobyqa",optCtrl=list(maxfun=100000)))
+summary(br.glm3)
+```
+```{r}
+AIC(br.glm3)
+BIC(br.glm3)
+```
+Similar to the above, B6 and B8 are not statistically significant unlike B1, B2, B3, B4, B5 and B7. 
+
+Based on AIC and BIC, this model does not fit the dataset as well as the models in previous question.
+
+
+Continuing on with the model above, we use the MCMCpack function MCMChlogit() to estimate the same parameters with Bayesian estimation. Because the model only has a random intercept, we specify random=~1 and r=2, R=1 in the MCMChlogit() function. We set burnin=10000, mcmc=20000 and thin=20.
+```{r}
+a= MCMChlogit(Chrun~Age+Income+HomeVal+Tenure+DirectDeposit+Loan+Dist+MktShare, random=~1,group = "TractID", data=mv.data, burnin = 10000, mcmc = 20000, thin = 20,r = 2,R=diag(1))
+summary(a$mcmc[,1:9])
+```
+We can see how the fixed effects are significant at the 5% level.
+
+```{r}
+plot(a$mcmc[,6])
+plot(a$mcmc[,3])
+```
+
+
+
