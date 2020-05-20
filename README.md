@@ -1,5 +1,4 @@
-# super-duper-train
-Binary Data Regression Models for Bank Customer Attrition 
+# Binary Data Regression Models for Bank Customer Attrition 
 
 
 For the analysis, the management has given you access to 2505 customers, among whom 449 (about 18%) have closed their accounts within one year. As a consultant, you would like to know what demographic and behavioral variables contribute to higher attrition/churn rates among these customers.
